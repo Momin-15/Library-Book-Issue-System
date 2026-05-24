@@ -1,73 +1,51 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.time.LocalDate;
 
-class EmptyFieldException extends Exception {
-
-  public EmptyFieldException(String message) {
+class InvalidDateException extends Exception {
+  public InvalidDateException(String message) {
     super(message);
   }
 }
 
-class InvalidRollNumberException extends Exception {
-
-  public InvalidRollNumberException(String message) {
+class NullSelectionException extends Exception {
+  public NullSelectionException(String message) {
     super(message);
   }
 }
 
 public class LibraryBookIssueSystem extends JFrame implements ActionListener {
 
-  JLabel nameLabel, rollLabel, bookLabel, categoryLabel;
-  JLabel remarksLabel;
+  JLabel issueDateLabel, returnDateLabel;
+  JLabel typeLabel, categoryLabel;
 
-  JTextField nameField, rollField, bookField;
-
-  JTextArea remarksArea;
+  JTextField issueDateField, returnDateField;
 
   JComboBox<String> categoryBox;
+
+  JRadioButton newEdition, oldEdition;
+
+  ButtonGroup group;
 
   JButton issueButton, resetButton, exitButton;
 
   public LibraryBookIssueSystem() {
 
     setTitle("Library Book Issue System");
-    setSize(600, 500);
+    setSize(600, 450);
     setLayout(null);
     setLocationRelativeTo(null);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-    getContentPane().setBackground(Color.LIGHT_GRAY);
-
-    nameLabel = new JLabel("Student Name");
-    nameLabel.setBounds(50, 50, 120, 25);
-    add(nameLabel);
-
-    nameField = new JTextField();
-    nameField.setBounds(200, 50, 200, 25);
-    add(nameField);
-
-    rollLabel = new JLabel("Roll Number");
-    rollLabel.setBounds(50, 100, 120, 25);
-    add(rollLabel);
-
-    rollField = new JTextField();
-    rollField.setBounds(200, 100, 200, 25);
-    add(rollField);
-
-    bookLabel = new JLabel("Book Title");
-    bookLabel.setBounds(50, 150, 120, 25);
-    add(bookLabel);
-
-    bookField = new JTextField();
-    bookField.setBounds(200, 150, 200, 25);
-    add(bookField);
+    getContentPane().setBackground(ColorTIHW);
 
     categoryLabel = new JLabel("Book Category");
-    categoryLabel.setBounds(50, 200, 120, 25);
+    categoryLabel.setBounds(50, 50, 120, 25);
     add(categoryLabel);
 
     String categories[] = {
+            "Select Category",
             "Programming",
             "AI",
             "Databases",
@@ -75,29 +53,50 @@ public class LibraryBookIssueSystem extends JFrame implements ActionListener {
     };
 
     categoryBox = new JComboBox<>(categories);
-    categoryBox.setBounds(200, 200, 200, 25);
+    categoryBox.setBounds(220, 50, 200, 25);
     add(categoryBox);
 
-    remarksLabel = new JLabel("Remarks");
-    remarksLabel.setBounds(50, 250, 120, 25);
-    add(remarksLabel);
+    typeLabel = new JLabel("Book Type");
+    typeLabel.setBounds(50, 100, 120, 25);
+    add(typeLabel);
 
-    remarksArea = new JTextArea();
-    remarksArea.setBounds(200, 250, 200, 80);
-    add(remarksArea);
+    newEdition = new JRadioButton("New Edition");
+    newEdition.setBounds(220, 100, 120, 25);
+
+    oldEdition = new JRadioButton("Old Edition");
+    oldEdition.setBounds(350, 100, 120, 25);
+
+    add(newEdition);
+    add(oldEdition);
+
+    group = new ButtonGroup();
+    group.add(newEdition);
+    group.add(oldEdition);
+
+    issueDateLabel = new JLabel("Issue Date");
+    issueDateLabel.setBounds(50, 160, 120, 25);
+    add(issueDateLabel);
+
+    issueDateField = new JTextField();
+    issueDateField.setBounds(220, 160, 200, 25);
+    add(issueDateField);
+
+    returnDateLabel = new JLabel("Return Date");
+    returnDateLabel.setBounds(50, 220, 120, 25);
+    add(returnDateLabel);
+
+    returnDateField = new JTextField();
+    returnDateField.setBounds(220, 220, 200, 25);
+    add(returnDateField);
 
     issueButton = new JButton("Issue Book");
-    issueButton.setBounds(50, 380, 120, 35);
+    issueButton.setBounds(50, 320, 120, 35);
 
     resetButton = new JButton("Reset");
-    resetButton.setBounds(220, 380, 100, 35);
+    resetButton.setBounds(220, 320, 100, 35);
 
     exitButton = new JButton("Exit");
-    exitButton.setBounds(370, 380, 100, 35);
-
-    issueButton.setBackground(Color.GREEN);
-    resetButton.setBackground(Color.YELLOW);
-    exitButton.setBackground(Color.RED);
+    exitButton.setBounds(380, 320, 100, 35);
 
     add(issueButton);
     add(resetButton);
@@ -106,9 +105,6 @@ public class LibraryBookIssueSystem extends JFrame implements ActionListener {
     issueButton.addActionListener(this);
     resetButton.addActionListener(this);
     exitButton.addActionListener(this);
-
-    JOptionPane.showMessageDialog(this,
-            "Welcome To Library Management System");
 
     setVisible(true);
   }
@@ -119,48 +115,67 @@ public class LibraryBookIssueSystem extends JFrame implements ActionListener {
 
       try {
 
-        String name = nameField.getText();
-        String roll = rollField.getText();
-        String book = bookField.getText();
+        // empty field validation
+        if (issueDateField.getText().trim().isEmpty()
+                || returnDateField.getText().trim().isEmpty()) {
 
-        if (name.isEmpty() || roll.isEmpty() || book.isEmpty()) {
-
-          throw new EmptyFieldException(
-                  "All fields are required");
+          throw new NullSelectionException(
+                  "Issue Date and Return Date cannot be empty");
         }
 
-        Integer.parseInt(roll);
+        if (categoryBox.getSelectedIndex() == 0) {
 
-        if (!roll.matches("[0-9]+")) {
+          throw new NullSelectionException(
+                  "Please select book category");
+        }
 
-          throw new InvalidRollNumberException(
-                  "Roll Number must contain numbers only");
+        if (!newEdition.isSelected()
+                && !oldEdition.isSelected()) {
+
+          throw new NullSelectionException(
+                  "Please select book type");
+        }
+
+        LocalDate issue =
+                LocalDate.parse(issueDateField.getText());
+
+        LocalDate ret =
+                LocalDate.parse(returnDateField.getText());
+
+        if (ret.isBefore(issue)) {
+
+          throw new InvalidDateException(
+                  "Return date cannot be earlier than issue date");
+        }
+
+        // same day validation
+        if (ret.equals(issue)) {
+
+          throw new InvalidDateException(
+                  "Issue date and return date cannot be same");
         }
 
         JOptionPane.showMessageDialog(this,
-                "Book Issued Successfully\n"
-                        + "Student: " + name
-                        + "\nRoll No: " + roll
-                        + "\nBook: " + book);
+                "Book Issued Successfully");
 
       }
 
-      catch (EmptyFieldException ex) {
+      catch (NullSelectionException ex) {
 
         JOptionPane.showMessageDialog(this,
                 ex.getMessage());
       }
 
-      catch (InvalidRollNumberException ex) {
+      catch (InvalidDateException ex) {
 
         JOptionPane.showMessageDialog(this,
                 ex.getMessage());
       }
 
-      catch (NumberFormatException ex) {
+      catch (Exception ex) {
 
         JOptionPane.showMessageDialog(this,
-                "Roll Number must be numeric");
+                "Use Date Format YYYY-MM-DD");
       }
 
       finally {
@@ -172,10 +187,12 @@ public class LibraryBookIssueSystem extends JFrame implements ActionListener {
 
     if (e.getSource() == resetButton) {
 
-      nameField.setText("");
-      rollField.setText("");
-      bookField.setText("");
-      remarksArea.setText("");
+      issueDateField.setText("");
+      returnDateField.setText("");
+
+      categoryBox.setSelectedIndex(0);
+
+      group.clearSelection();
 
       JOptionPane.showMessageDialog(this,
               "Form Reset Successfully");
@@ -183,7 +200,15 @@ public class LibraryBookIssueSystem extends JFrame implements ActionListener {
 
     if (e.getSource() == exitButton) {
 
-      System.exit(0);
+      int option = JOptionPane.showConfirmDialog(
+              this,
+              "Are you sure you want to exit?",
+              "Exit Confirmation",
+              JOptionPane.YES_NO_OPTION);
+
+      if (option == JOptionPane.YES_OPTION) {
+        System.exit(0);
+      }
     }
   }
 
